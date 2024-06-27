@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e990de36a555aa747abe1d6c9ceb500c, type: 3}
+  m_Name: Crystal Extractor
+  m_EditorClassIdentifier: 
+  item_sprite: {fileID: 21300000, guid: 4b0893bbaf54f6944afbb14dcaf193dd, type: 3}
+  item_name: Crystal Extractor
+  item_type: 1
+  build_type: 2
+  material_type: 0
+  price_type: 2
+  item_description: "Este item \xE9 capaz de minerar cristais"
+  item_price: 500
+  item_prefab: {fileID: 0}
+  farm_reward: 0
+  farm_level: 1
+  farm_mature_timer: 2
+  farm_drop_chance: 20
+  farm_stock_limit: 10
