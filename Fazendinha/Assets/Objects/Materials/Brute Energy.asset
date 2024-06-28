@@ -17,7 +17,8 @@ MonoBehaviour:
   item_type: 2
   build_type: 0
   material_type: 2
-  price_type: 2
-  item_description: Este material pode ser adquirido com Cristais Geradores de Energia
+  price_type: 3
+  item_description: "Este material pode ser adquirido com Cristais Geradores de Energia.
+    N\xE3o pode ser comprado"
   item_price: 100
   item_prefab: {fileID: 0}

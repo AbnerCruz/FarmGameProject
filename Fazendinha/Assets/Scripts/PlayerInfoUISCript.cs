@@ -9,6 +9,7 @@ public class PlayerInfoUISCript : MonoBehaviour
     public Text player_nickname;
     public Text player_money;
     public Text player_rocks;
+    public Text player_crystals;
     public Text player_energy;
 
 
@@ -21,6 +22,7 @@ public class PlayerInfoUISCript : MonoBehaviour
     void Update(){
         player_money.text = manager.player.player_money.ToString();
         player_rocks.text = manager.player.player_rocks.ToString();
+        player_crystals.text = manager.player.player_crystals.ToString();
         player_energy.text = manager.player.player_energy.ToString();
     }
 }

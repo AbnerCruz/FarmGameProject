@@ -9,7 +9,7 @@ public class FarmObject : Item
 {
     public FarmReward farm_reward;
     public enum FarmReward{
-        Rocks,
+        Crystal,
         Energy
     }
     public int farm_level;

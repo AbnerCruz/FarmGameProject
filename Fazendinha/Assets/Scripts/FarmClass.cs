@@ -7,7 +7,7 @@ public class FarmClass : BuildBaseClass
 {
     //Management
     GameManager manager;
-    FarmObject farm_object;
+    public FarmObject farm_object;
     
     //Mature Timer
     public float farm_initial_mature_timer;

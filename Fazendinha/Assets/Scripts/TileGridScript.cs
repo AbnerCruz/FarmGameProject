@@ -4,5 +4,7 @@ using UnityEngine;
 
 public class TileGridScript : MonoBehaviour
 {
-    public Sprite tile_sprite;
+    public Sprite rock_tile_sprite;
+    public Sprite crystal_tile_sprite;
+    public Sprite breaked_tile_sprite;
 }

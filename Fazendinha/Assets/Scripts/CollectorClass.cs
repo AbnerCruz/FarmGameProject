@@ -5,7 +5,7 @@ using UnityEngine;
 public class CollectorClass : BuildBaseClass
 {
     GameManager manager;
-    CollectorObject collector_object;
+    public CollectorObject collector_object;
     float collector_timer;
     float collector_initial_timer;
 
@@ -36,12 +36,13 @@ public class CollectorClass : BuildBaseClass
                     switch(current_cell){
                     case 0: //Null cell
                         break;
-                    case 1: //Farm Cell
+                    case 1: //Crystal Farm Cell
                         manager.player.player_energy += principal_grid.farm_grid[coordsX,coordsY].farm_stock;
                         principal_grid.farm_grid[coordsX,coordsY].farm_stock = 0;
                         break;
-                    case 2: //RockFarm Cell
-                        manager.player.player_rocks += principal_grid.farm_grid[coordsX,coordsY].farm_stock;
+                    case 2: //Extractor Cell
+                        manager.player.player_rocks += Random.Range(1,10);
+                        manager.player.player_crystals += principal_grid.farm_grid[coordsX,coordsY].farm_stock;
                         principal_grid.farm_grid[coordsX,coordsY].farm_stock = 0;
                         break;
                     }

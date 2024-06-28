@@ -14,10 +14,14 @@ public class GridClass
     int grid_cell_size;
     //Grids
     public GameObject[,] tile_grid;
+    public GameObject[,] build_tile_grid;
     TextMesh[,] text_base_grid_value;
     public TextMesh[,] text_farm_accumulated_points;
     public int[,] base_grid;
-    public int[,] rocks_grid;
+    public int[,] crystal_grid;
+    public int[,] ore_amount_grid;
+    public int[,] ore_max_life_grid;
+    public int[,] ore_life_grid;
     public FarmClass[,] farm_grid;
     public CollectorClass[,] collector_grid;
 
@@ -32,10 +36,14 @@ public class GridClass
         text_base_grid_value = new TextMesh[grid_width, grid_height];
         text_farm_accumulated_points = new TextMesh[grid_width, grid_height];
         base_grid = new int[grid_width, grid_height];
-        rocks_grid = new int[grid_width, grid_height];
+        crystal_grid = new int[grid_width, grid_height];
+        ore_amount_grid = new int[grid_width, grid_height];
+        ore_max_life_grid = new int[grid_width, grid_height];
+        ore_life_grid = new int[grid_width, grid_height];
         farm_grid = new FarmClass[grid_width, grid_height];
         collector_grid = new CollectorClass[grid_width, grid_height];
         tile_grid = new GameObject[grid_width, grid_height];
+        build_tile_grid = new GameObject[grid_width, grid_height];
         //functions
         GridDebug();
         GridTiles();
@@ -63,15 +71,44 @@ public class GridClass
     void GridTiles(){
         for(int x = 0; x < tile_grid.GetLength(0); x++){
             for(int y = 0; y < tile_grid.GetLength(1); y++){
-                GameObject parent = GameObject.Find("TileGrid");
+                //Base Tile Grid
+                GameObject tile_parent = GameObject.Find("TileGrid");
                 tile_grid[x,y] = new GameObject($"Tile[{x},{y}]");
                 tile_grid[x,y].transform.position = GetWorldPosition(x,y) + new Vector2(grid_cell_size,grid_cell_size) * 0.5f;
-                tile_grid[x,y].transform.SetParent(parent.transform);
+                tile_grid[x,y].transform.SetParent(tile_parent.transform);
+                tile_grid[x,y].transform.localScale = new Vector2(grid_cell_size,grid_cell_size); //CellSize
                 //Sprite Config
                 tile_grid[x,y].AddComponent<SpriteRenderer>();
-                tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = parent.GetComponent<TileGridScript>().tile_sprite; //Initial Sprite
-                tile_grid[x,y].transform.localScale = new Vector2(grid_cell_size,grid_cell_size); //CellSize
+                GridTilesUpdate(x,y,tile_parent);
+
+                //Build Tile Grid
+                GameObject build_parent = GameObject.Find("BuildGrid");
+                build_tile_grid[x,y] = new GameObject($"Build[{x},{y}]");
+                build_tile_grid[x,y].transform.position = GetWorldPosition(x,y) + new Vector2(grid_cell_size,grid_cell_size) * 0.5f;
+                build_tile_grid[x,y].transform.SetParent(build_parent.transform);
+                build_tile_grid[x,y].transform.localScale = new Vector2(grid_cell_size,grid_cell_size);
+                //Sprite Config
+                build_tile_grid[x,y].AddComponent<SpriteRenderer>();
+                build_tile_grid[x,y].GetComponent<SpriteRenderer>().sortingOrder = 1;
+                BuildTileGridUpdate(x,y,null);
             }
+        }
+    }
+    public void GridTilesUpdate(int x, int y, GameObject parent){
+        if(crystal_grid[x,y] == 0){
+            tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = parent.GetComponent<TileGridScript>().rock_tile_sprite; //Initial Sprite
+        }
+        else if(crystal_grid[x,y] == 1){
+            tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = parent.GetComponent<TileGridScript>().crystal_tile_sprite; //Initial Sprite
+        }
+    }
+    public void BuildTileGridUpdate(int x, int y,Sprite sprite){
+        if(sprite != null){
+                build_tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = sprite;
+
+        }
+        else{
+            build_tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = null;
         }
     }
 

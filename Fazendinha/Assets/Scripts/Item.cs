@@ -19,11 +19,12 @@ public class Item : ScriptableObject
     }
     public enum MaterialType{
         none,
-        Crystal,
+        Ore,
         Energy,
     }
     public enum PriceType{
         none,
+        Ore,
         Crystal,
         Money,
     }

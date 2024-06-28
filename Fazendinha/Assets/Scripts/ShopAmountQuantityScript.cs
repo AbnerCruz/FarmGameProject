@@ -31,10 +31,13 @@ public class ShopAmountQuantityScript : MonoBehaviour
             if(buy_or_sell){
                 switch(selected_object.item_type){
                     case Item.ItemType.Build:
-                    switch(selected_object.build_type){
-                        case Item.BuildType.FarmObject:
+                    switch(selected_object.price_type){
+                        case Item.PriceType.Ore:
                             max_quantity = Mathf.FloorToInt(manager.player.player_rocks/selected_object.item_price);
-                        break;
+                            break;
+                        case Item.PriceType.Crystal:
+                            max_quantity = Mathf.FloorToInt(manager.player.player_crystals/selected_object.item_price);
+                            break;
                         default:
                             max_quantity = Mathf.FloorToInt(manager.player.player_money/selected_object.item_price);
                         break;
@@ -55,13 +58,16 @@ public class ShopAmountQuantityScript : MonoBehaviour
                 int var_quantity = 0;
                 switch(selected_object.item_type){
                     case Item.ItemType.Material:
-                        switch(selected_object.material_type){
-                            case Item.MaterialType.Crystal:
+                        switch(selected_object.price_type){
+                            case Item.PriceType.Ore:
                                 var_quantity = Mathf.FloorToInt(manager.player.player_rocks);
-                            break;
-                            case Item.MaterialType.Energy:
+                                break;
+                            case Item.PriceType.Crystal:
+                                var_quantity = Mathf.FloorToInt(manager.player.player_crystals);
+                                break;
+                            case Item.PriceType.Money:
                                 var_quantity = Mathf.FloorToInt(manager.player.player_energy);
-                            break;
+                                break;
                         }
                     break;
                     case Item.ItemType.Build:

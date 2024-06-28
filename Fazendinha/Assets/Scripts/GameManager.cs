@@ -34,11 +34,15 @@ public class GameManager : MonoBehaviour
     float lastClickTime; //rock collect click timer
 
     //Materials
-        //Crystals
-        public GameObject crystal_material_prefab; // prefab of rocks
-        public int crystal_life = 5;
+        //Ores
+        public int ore_life = 5; // Range od Life of Ores
+            //Rock
+            public GameObject rock_material_prefab; // prefab of rocks
+            //Crystal
+            public GameObject crystal_material_prefab;
         //Money
         public GameObject money_material_prefab; // prefab of money
+        
     
 
 
@@ -65,7 +69,11 @@ public class GameManager : MonoBehaviour
 
 //***UNITY METHODS***//
     void Awake(){
+        //Creating Base Grid
         principal_grid = new GridClass(grid_width, grid_height, grid_cell_size,this);
+        //Creating Crystal Grid
+        ore_life = 5;
+        CreatingCrystalGrid();
     }
     void Start(){
         play_mode = true;
@@ -79,6 +87,8 @@ public class GameManager : MonoBehaviour
 
         //rock reward cooldown
         rock_reward_cooldown_initial = 1f;
+
+        
     }
     void Update(){
         //Farm Function
@@ -86,7 +96,7 @@ public class GameManager : MonoBehaviour
         //Colector Function
         Collector();
         //Camera Movement
-        mainCamera.Move();
+        mainCamera.Move(grid_width,grid_height,grid_cell_size);
         //BuildObject
         BuildObjectDefinition();
         //Rock Reward Cooldown
@@ -129,7 +139,7 @@ public class GameManager : MonoBehaviour
                     if(build_object != null && build_object.item_type == Item.ItemType.Build && principal_grid.ReturnCellValue(utils.GetMousePos()) == null){
                         int x,y;
                         principal_grid.GetXY(utils.GetMousePos(), out x, out y);
-                        if(principal_grid.rocks_grid[x,y] >= crystal_life){
+                        if(principal_grid.ore_life_grid[x,y] <= 0){
                            switch(build_object.build_type){
                                 case Item.BuildType.FarmObject:
                                     principal_grid.EditGridCellValue(utils.GetMousePos(), new FarmClass((FarmObject)build_object, this));
@@ -143,7 +153,8 @@ public class GameManager : MonoBehaviour
                                     principal_grid.EditGridCellValue(utils.GetMousePos(), new CollectorClass(this,(CollectorObject)build_object));
                                     player.inventory.CreateBuildDecrease(build_object);
                                     break;
-                            }    
+                            }  
+                            principal_grid.BuildTileGridUpdate(x,y,build_object.item_sprite);
                         }
                         else{
                             //can't build
@@ -228,43 +239,24 @@ public class GameManager : MonoBehaviour
                         int x,y;
                         principal_grid.GetXY(utils.GetMousePos(), out x, out y);
                         if(principal_grid.farm_grid[x,y] != null){
-                            if(principal_grid.farm_grid[x,y].farm_reward == FarmObject.FarmReward.Rocks){
-                                player.player_rocks += principal_grid.farm_grid[x,y].farm_stock;
-                                principal_grid.farm_grid[x,y].farm_stock = 0;
-                                UpdateTextAccumulatedPoints();
+                            if(principal_grid.farm_grid[x,y].farm_reward == FarmObject.FarmReward.Crystal){
+                                if(principal_grid.farm_grid[x,y].farm_stock != 0){
+                                    player.player_rocks += Random.Range(1,principal_grid.farm_grid[x,y].farm_stock/2);
+                                    player.player_crystals += principal_grid.farm_grid[x,y].farm_stock;
+                                    principal_grid.farm_grid[x,y].farm_stock = 0;
+                                    UpdateTextAccumulatedPoints();
+                                }
                             }
                             else if(principal_grid.farm_grid[x,y].farm_reward == FarmObject.FarmReward.Energy){
-                                player.player_energy += principal_grid.farm_grid[x,y].farm_stock;
-                                principal_grid.farm_grid[x,y].farm_stock = 0;
-                                UpdateTextAccumulatedPoints();
-                            }
-                        }
-                        //World Click Rocks Reward
-                        else if(principal_grid.rocks_grid[x,y] < crystal_life && principal_grid.base_grid[x,y] == 0 && can_colect_farms){
-                            //Visual Function here function();
-                            if(rock_reward_cooldown >= rock_reward_cooldown_initial){
-                                int chance = 50; // % of chance
-                                int sorted = Random.Range(1,100);
-                                if(sorted > 100-chance){
-                                    int reward = Random.Range(2,50);
-                                    for(int i = 0; i < Mathf.FloorToInt(reward/2); i++){
-                                        GameObject newRock = Instantiate(crystal_material_prefab, utils.GetMousePos(), Quaternion.identity);
-                                        newRock.GetComponent<Rigidbody2D>().velocity = new Vector3(Random.Range(-3f,3f),Random.Range(1f,4f),0);
-                                    }
-                                    player.player_rocks += reward;
-                                    principal_grid.rocks_grid[x,y] += 1;
-                                    rock_reward_cooldown = 0f;
-                                    Color current_color = principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().color;
-                                    principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().color = new Color(current_color.r, current_color.g,current_color.b,current_color.a - 0.2f);
+                                if(principal_grid.farm_grid[x,y].farm_stock != 0){
+                                    player.player_energy += principal_grid.farm_grid[x,y].farm_stock;
+                                    principal_grid.farm_grid[x,y].farm_stock = 0;
+                                    UpdateTextAccumulatedPoints();
                                 }
                             }
                         }
-                        if(principal_grid.rocks_grid[x,y] >= crystal_life){
-                            principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = null;
-                        }
-                    }
-                    else{
-                        player.player_rocks++;
+                        //World Click Rocks Reward
+                        CrystalReward(x,y);
                     }
                 }
             }
@@ -330,14 +322,20 @@ public class GameManager : MonoBehaviour
                     player.inventory.SellFunction(item, quantity);
                     break;
                 case Item.ItemType.Material:
-                    switch(item.material_type){
-                        case Item.MaterialType.Crystal:
+                    switch(item.price_type){
+                        case Item.PriceType.Ore:
                             if(player.player_rocks >= quantity){
                                 player.player_rocks -= quantity;
                                 player.player_money += item.item_price * quantity;
                             }
                             break;
-                        case Item.MaterialType.Energy:
+                        case Item.PriceType.Crystal:
+                            if(player.player_crystals >= quantity){
+                                player.player_crystals -= quantity;
+                                player.player_money += item.item_price * quantity;
+                            }
+                            break;
+                        case Item.PriceType.Money:
                             if(player.player_energy >= quantity){
                                 player.player_energy -= quantity;
                                 player.player_money += item.item_price * quantity;
@@ -362,14 +360,24 @@ public class GameManager : MonoBehaviour
                     //NO MONEY TO BUY FUNCTIONS
                 }
                 break;
-            case Item.PriceType.Crystal:
+            case Item.PriceType.Ore:
                 if(player.player_rocks >= item_to_shop.item_price * quantity){
                     //BUYED
-                    player.player_rocks -= item_to_shop.item_price * quantity;
                     NewItemToInventory(item_to_shop, quantity);
+                    player.player_rocks -= item_to_shop.item_price * quantity;
                 }
                 else{
                     //NO ROCKS TO BUY FUNCTIONS
+                }
+                break;
+            case Item.PriceType.Crystal:
+                if(player.player_crystals >= item_to_shop.item_price * quantity){
+                    //BUYED
+                    NewItemToInventory(item_to_shop, quantity);
+                    player.player_crystals -= item_to_shop.item_price * quantity;
+                }
+                else{
+                    //NO CRYSTALS TO BUY FUNCTIONS
                 }
                 break;
         }
@@ -439,21 +447,30 @@ public class GameManager : MonoBehaviour
     //button function to open amount selection to buy
     public void SelectAmountBuyingFunction(){
         if(!(item_to_shop.item_type == Item.ItemType.Material)){
-            switch(item_to_shop.build_type){
-                case Item.BuildType.FarmObject:
+            switch(item_to_shop.price_type){
+                case Item.PriceType.Crystal:
+                    if(player.player_crystals >= item_to_shop.item_price){
+                        shop_amount_bool = true;
+                        shop_amount_screen.GetComponent<ShopAmountQuantityScript>().buy_or_sell = true;
+                    }
+                    break;
+                case Item.PriceType.Ore:
                     if(player.player_rocks >= item_to_shop.item_price){
                         shop_amount_bool = true;
                         shop_amount_screen.GetComponent<ShopAmountQuantityScript>().buy_or_sell = true;
                     }
-                break;
+                    break;
                 default:
                     if(player.player_money >= item_to_shop.item_price){
                         shop_amount_bool = true;
                         shop_amount_screen.GetComponent<ShopAmountQuantityScript>().buy_or_sell = true;
                     }
-                break;
+                    break;
             }
 
+        }
+        else{
+            //Cant buy materials
         }
     }
     public void SelectAmountSellingFunction(){
@@ -488,13 +505,93 @@ public class GameManager : MonoBehaviour
             current_panel.selected_item_name.GetComponent<Text>().text = item_to_shop.item_name;
             current_panel.selected_item_description.GetComponent<Text>().text = item_to_shop.item_description;
             current_panel.selected_item_price.GetComponent<Text>().text = ": " + item_to_shop.item_price.ToString();
-            switch(item_to_shop.price_type){
-                case Item.PriceType.Crystal:
-                    current_panel.selected_item_price_icon.GetComponent<Image>().sprite = crystal_material_prefab.GetComponent<SpriteRenderer>().sprite;//Crystal
-                    break;
-                case Item.PriceType.Money:
-                    current_panel.selected_item_price_icon.GetComponent<Image>().sprite = money_material_prefab.GetComponent<SpriteRenderer>().sprite;//Money
-                    break;
+            if((item_to_shop.material_type == Item.MaterialType.none)){
+                switch(item_to_shop.price_type){
+                    case Item.PriceType.Ore:
+                        current_panel.selected_item_price_icon.GetComponent<Image>().sprite = rock_material_prefab.GetComponent<SpriteRenderer>().sprite;//Crystal
+                        break;
+                    case Item.PriceType.Money:
+                        current_panel.selected_item_price_icon.GetComponent<Image>().sprite = money_material_prefab.GetComponent<SpriteRenderer>().sprite;//Money
+                        break;
+                    case Item.PriceType.Crystal:
+                        current_panel.selected_item_price_icon.GetComponent<Image>().sprite = crystal_material_prefab.GetComponent<SpriteRenderer>().sprite;
+                        break;
+                }
+            }
+            else{
+                current_panel.selected_item_price_icon.GetComponent<Image>().sprite = money_material_prefab.GetComponent<SpriteRenderer>().sprite;//Money
+            }
+        }
+    }
+    public void CrystalReward(int x, int y){
+        // if(principal_grid.rocks_grid[x,y] < crystal_life && principal_grid.base_grid[x,y] == 0 && can_colect_farms){
+        //     //Visual Function here function();
+        //     if(rock_reward_cooldown >= rock_reward_cooldown_initial){
+        //         int chance = 50; // % of chance
+        //         int sorted = Random.Range(1,100);
+        //         if(sorted > 100-chance){
+        //             int reward = Random.Range(2,50);
+                    //  for(int i = 0; i < Mathf.FloorToInt(reward/2); i++){
+                    //      GameObject newRock = Instantiate(rock_material_prefab, utils.GetMousePos(), Quaternion.identity);
+                    //      newRock.GetComponent<Rigidbody2D>().velocity = new Vector3(Random.Range(-3f,3f),Random.Range(1f,4f),0);
+                    //  }
+        //             player.player_rocks += reward;
+        //             principal_grid.rocks_grid[x,y] += 1;
+        //             rock_reward_cooldown = 0f;
+        //             Color current_color = principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().color;
+        //             principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().color = new Color(current_color.r, current_color.g,current_color.b,current_color.a - 0.2f);
+        //         }
+        //     }
+        // }
+        // if(principal_grid.rocks_grid[x,y] >= crystal_life){
+        //     principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = null;
+        // }
+        if(principal_grid.base_grid[x,y] == 0 && can_colect_farms){
+            if(rock_reward_cooldown >= rock_reward_cooldown_initial){
+                if(principal_grid.ore_life_grid[x,y] > 0){
+                    int reward = 0;
+                    if(principal_grid.crystal_grid[x,y] == 1){
+                        //Is a Crystal cell
+                        if(principal_grid.ore_amount_grid[x,y] > 0){
+                            //Have Crystals
+                            reward = Random.Range(principal_grid.ore_amount_grid[x,y]/2,principal_grid.ore_amount_grid[x,y]);
+                            player.player_crystals += reward;
+                            principal_grid.ore_life_grid[x,y]--;
+                        }
+                    }
+                    else{
+                        //Is not a Crystal cell
+                        if(principal_grid.ore_amount_grid[x,y] > 0){
+                            reward = Random.Range(principal_grid.ore_amount_grid[x,y]/2,principal_grid.ore_amount_grid[x,y]);
+                            player.player_rocks += reward;
+                            principal_grid.ore_life_grid[x,y]--;
+                        }
+                    }
+                    for(int i = 0; i < Mathf.FloorToInt(reward/2); i++){
+                        GameObject newRock = Instantiate(rock_material_prefab, utils.GetMousePos(), Quaternion.identity);
+                        newRock.GetComponent<Rigidbody2D>().velocity = new Vector3(Random.Range(-3f,3f),Random.Range(1f,4f),0);
+                    }
+                    rock_reward_cooldown = 0f;
+                    Color current_color = principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().color;
+                    if(principal_grid.ore_life_grid[x,y] <= 0){
+                        principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = GameObject.Find("TileGrid").GetComponent<TileGridScript>().breaked_tile_sprite;
+                    }
+                }
+            }
+        }
+    }
+    void CreatingCrystalGrid(){
+        for(int x = 0; x < principal_grid.crystal_grid.GetLength(0); x++){
+            for(int y = 0; y < principal_grid.crystal_grid.GetLength(1); y++){
+                int sorted = Random.Range(0,100);
+                int chance = 20;
+                if(sorted > 100 - chance){
+                    principal_grid.crystal_grid[x,y] = 1;
+                    principal_grid.GridTilesUpdate(x,y,GameObject.Find("TileGrid"));
+                }
+                principal_grid.ore_amount_grid[x,y] = Random.Range(10,25);
+                principal_grid.ore_max_life_grid[x,y] = Random.Range(2,ore_life);
+                principal_grid.ore_life_grid[x,y] = principal_grid.ore_max_life_grid[x,y];
             }
         }
     }

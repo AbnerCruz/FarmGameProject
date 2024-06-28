@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e990de36a555aa747abe1d6c9ceb500c, type: 3}
   m_Name: Crystal Extractor
   m_EditorClassIdentifier: 
-  item_sprite: {fileID: 21300000, guid: 4b0893bbaf54f6944afbb14dcaf193dd, type: 3}
+  item_sprite: {fileID: 21300000, guid: 87ead6df29dd32a4e8ba42eebe85a346, type: 3}
   item_name: Crystal Extractor
   item_type: 1
   build_type: 2
   material_type: 0
-  price_type: 2
+  price_type: 3
   item_description: "Este item \xE9 capaz de minerar cristais"
   item_price: 500
   item_prefab: {fileID: 0}

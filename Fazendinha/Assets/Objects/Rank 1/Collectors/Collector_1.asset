@@ -17,7 +17,7 @@ MonoBehaviour:
   item_type: 1
   build_type: 3
   material_type: 0
-  price_type: 2
+  price_type: 3
   item_description: This build can autocollect
   item_price: 5000
   item_prefab: {fileID: 0}

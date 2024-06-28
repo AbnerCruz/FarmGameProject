@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e990de36a555aa747abe1d6c9ceb500c, type: 3}
   m_Name: Energy Farm
   m_EditorClassIdentifier: 
-  item_sprite: {fileID: 21300000, guid: bb51334c6930f864abac38001f7bdf6e, type: 3}
+  item_sprite: {fileID: 21300000, guid: eb5fcc5b8703aeb49bdeb27a7611d46c, type: 3}
   item_name: Energy Farm
   item_type: 1
   build_type: 1
   material_type: 0
-  price_type: 1
+  price_type: 2
   item_description: "Este item \xE9 capaz de produzir energia"
   item_price: 1000
   item_prefab: {fileID: 0}
