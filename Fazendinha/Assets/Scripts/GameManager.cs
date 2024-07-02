@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
     public bool create_build; //if can or not build
     public bool remove_build; //if can or not remove build
     public bool can_colect_farms; //if can click to colect farms
+    public bool buying_tile; //if player is buying tile function
     [Header("Build Options")]
     public Item build_object; //selected item to build or destroy
     public GameObject create_build_UI_button; //Button to activate build system
@@ -35,7 +36,8 @@ public class GameManager : MonoBehaviour
 
     //Materials
         //Ores
-        public int ore_life = 5; // Range od Life of Ores
+        public int ore_life; // Range od Life of Ores
+        public Vector2 ore_amount_range = new Vector2();
             //Rock
             public GameObject rock_material_prefab; // prefab of rocks
             //Crystal
@@ -72,7 +74,6 @@ public class GameManager : MonoBehaviour
         //Creating Base Grid
         principal_grid = new GridClass(grid_width, grid_height, grid_cell_size,this);
         //Creating Crystal Grid
-        ore_life = 5;
         CreatingCrystalGrid();
     }
     void Start(){
@@ -106,6 +107,7 @@ public class GameManager : MonoBehaviour
         }
         //Debugs
         ShowDebugs();
+        AccumulatedFarmsVisibilityController();
 
         //Pause Mode
         if(play_mode){
@@ -113,6 +115,7 @@ public class GameManager : MonoBehaviour
             ShopStatus();
             DoubleClick();
             Inputs();
+            CanCollectFarmState();
         }
         else{ //Opening some panel
             can_colect_farms = false;
@@ -127,12 +130,6 @@ public class GameManager : MonoBehaviour
 //***MY METHODS***//
     //Build System
     void BuildSystem(){
-        if(create_build || remove_build){
-            can_colect_farms = false;
-        }
-        else{
-            can_colect_farms = true;
-        }
         if(Input.GetMouseButtonDown(0)){
             if(create_build){
                 if(principal_grid.VerifyGridLimits(utils.GetMousePos())){
@@ -140,22 +137,24 @@ public class GameManager : MonoBehaviour
                         int x,y;
                         principal_grid.GetXY(utils.GetMousePos(), out x, out y);
                         if(principal_grid.ore_life_grid[x,y] <= 0){
-                           switch(build_object.build_type){
-                                case Item.BuildType.FarmObject:
-                                    principal_grid.EditGridCellValue(utils.GetMousePos(), new FarmClass((FarmObject)build_object, this));
-                                    player.inventory.CreateBuildDecrease(build_object);
-                                    break;
-                                case Item.BuildType.ExtractingObject:
-                                    principal_grid.EditGridCellValue(utils.GetMousePos(), new FarmClass((FarmObject)build_object, this));
-                                    player.inventory.CreateBuildDecrease(build_object);
-                                    break;
-                                case Item.BuildType.CollectorObject:
-                                    principal_grid.EditGridCellValue(utils.GetMousePos(), new CollectorClass(this,(CollectorObject)build_object));
-                                    player.inventory.CreateBuildDecrease(build_object);
-                                    break;
-                            }  
-                            principal_grid.BuildTileGridUpdate(x,y,build_object.item_sprite);
-                        }
+                            if(principal_grid.player_tiles[x,y] == 1){
+                                switch(build_object.build_type){
+                                        case Item.BuildType.FarmObject:
+                                            principal_grid.EditGridCellValue(utils.GetMousePos(), new FarmClass((FarmObject)build_object, this));
+                                            player.inventory.CreateBuildDecrease(build_object);
+                                            break;
+                                        case Item.BuildType.ExtractingObject:
+                                            principal_grid.EditGridCellValue(utils.GetMousePos(), new FarmClass((FarmObject)build_object, this));
+                                            player.inventory.CreateBuildDecrease(build_object);
+                                            break;
+                                        case Item.BuildType.CollectorObject:
+                                            principal_grid.EditGridCellValue(utils.GetMousePos(), new CollectorClass(this,(CollectorObject)build_object));
+                                            player.inventory.CreateBuildDecrease(build_object);
+                                            break;
+                                    }  
+                                    principal_grid.BuildTileGridUpdate(x,y,build_object.item_sprite);
+                                }
+                            }
                         else{
                             //can't build
                         }
@@ -164,9 +163,14 @@ public class GameManager : MonoBehaviour
             }
             else if(remove_build){
                 if(principal_grid.VerifyGridLimits(utils.GetMousePos())){
+                    int x,y;
+                    principal_grid.GetXY(utils.GetMousePos(), out x, out y);
                     if(principal_grid.ReturnCellValue(utils.GetMousePos()) != null){
                         player.inventory.RemoveBuildIncrease(principal_grid.ReturnCellValue(utils.GetMousePos()).build_base_item);
                         principal_grid.EditGridCellValue(utils.GetMousePos(), null);
+                        if(principal_grid.player_tiles[x,y] == 1){
+                            principal_grid.BuildTileGridUpdate(x,y,null);
+                        }
                     }
                 }
             }
@@ -234,10 +238,11 @@ public class GameManager : MonoBehaviour
         if(Input.GetMouseButtonDown(0)){
             float timeSinceLastClick = Time.time - lastClickTime;
             if(timeSinceLastClick <= 0.2f){
-                if(can_colect_farms){
-                    if(principal_grid.VerifyGridLimits(utils.GetMousePos())){
-                        int x,y;
-                        principal_grid.GetXY(utils.GetMousePos(), out x, out y);
+                if(principal_grid.VerifyGridLimits(utils.GetMousePos())){
+                    int x,y;
+                    principal_grid.GetXY(utils.GetMousePos(), out x, out y);
+                    //Farms Collect
+                    if(can_colect_farms){ 
                         if(principal_grid.farm_grid[x,y] != null){
                             if(principal_grid.farm_grid[x,y].farm_reward == FarmObject.FarmReward.Crystal){
                                 if(principal_grid.farm_grid[x,y].farm_stock != 0){
@@ -255,8 +260,20 @@ public class GameManager : MonoBehaviour
                                 }
                             }
                         }
-                        //World Click Rocks Reward
-                        CrystalReward(x,y);
+                        //Rocks And Crystals Click Reward
+                        CrystalReward(x,y); 
+                    }
+                    else if(buying_tile){//Buy new Tile
+                        if(principal_grid.ore_life_grid[x,y] <= 0 && player.player_tiles > 0){
+                            if(principal_grid.player_tiles[x,y] == 0){
+                                principal_grid.player_tiles[x,y] = 1;
+                                principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = GameObject.Find("TileGrid").GetComponent<TileGridScript>().flat_rock_tile;
+                                player.player_tiles -= 1;
+                            }
+                            else{
+                                Debug.Log("already have tile");
+                            }
+                        }
                     }
                 }
             }
@@ -266,30 +283,17 @@ public class GameManager : MonoBehaviour
 
     //UI Build System Control
     public void CreateBuildBoolControl(){
-        if(remove_build){
-            remove_build = false;
-        }
         create_build =! create_build;
         if(create_build){
-            remove_create_build_UI_button.GetComponent<Image>().color = new Color(255,0,0,0.2f);
-            create_build_UI_button.GetComponent<Image>().color = new Color(0,255,0,1f); 
-        }
-        else{
-            create_build_UI_button.GetComponent<Image>().color = new Color(0,255,0,0.2f);
+            remove_build = false;
+            buying_tile = false;
         }
     }
     public void RemoveBuildBoolControl(){
-        if(create_build){
-            create_build = false;
-            create_build_UI_button.GetComponent<Image>().color = new Color(0,255,0,0.2f);  
-        }
         remove_build =! remove_build;
         if(remove_build){
-            remove_create_build_UI_button.GetComponent<Image>().color = new Color(255,0,0,1f);
-            create_build_UI_button.GetComponent<Image>().color = new Color(0,255,0,0.2f); 
-        }
-        else{
-            remove_create_build_UI_button.GetComponent<Image>().color = new Color(255,0,0,0.2f);
+            create_build = false;
+            buying_tile = false;
         }
     }
 
@@ -306,6 +310,9 @@ public class GameManager : MonoBehaviour
             else{
                 //ESC FUNCTION HERE
             }
+        }
+        if(Input.GetKeyDown(KeyCode.J)){
+            BuyTileBoolController();
         }
     }
     //Add a new Item to Inventory
@@ -336,9 +343,17 @@ public class GameManager : MonoBehaviour
                             }
                             break;
                         case Item.PriceType.Money:
-                            if(player.player_energy >= quantity){
-                                player.player_energy -= quantity;
-                                player.player_money += item.item_price * quantity;
+                            if(!(item.item_name == "Tile")){
+                                if(player.player_energy >= quantity){
+                                    player.player_energy -= quantity;
+                                    player.player_money += item.item_price * quantity;
+                                }
+                            }
+                            else{
+                                if(player.player_tiles >= quantity){
+                                    player.player_tiles -= quantity;
+                                    player.player_money += item.item_price * quantity;
+                                }
                             }
                             break;
                     }
@@ -349,37 +364,45 @@ public class GameManager : MonoBehaviour
     }
     //Buying Function
     public void Buying(int quantity){
-        switch(item_to_shop.price_type){
-            case Item.PriceType.Money:
-                if(player.player_money >= item_to_shop.item_price * quantity){
-                    //BUYED
-                    NewItemToInventory(item_to_shop, quantity);
-                    player.player_money -= item_to_shop.item_price * quantity;
-                }
-                else{
-                    //NO MONEY TO BUY FUNCTIONS
-                }
-                break;
-            case Item.PriceType.Ore:
-                if(player.player_rocks >= item_to_shop.item_price * quantity){
-                    //BUYED
-                    NewItemToInventory(item_to_shop, quantity);
-                    player.player_rocks -= item_to_shop.item_price * quantity;
-                }
-                else{
-                    //NO ROCKS TO BUY FUNCTIONS
-                }
-                break;
-            case Item.PriceType.Crystal:
-                if(player.player_crystals >= item_to_shop.item_price * quantity){
-                    //BUYED
-                    NewItemToInventory(item_to_shop, quantity);
-                    player.player_crystals -= item_to_shop.item_price * quantity;
-                }
-                else{
-                    //NO CRYSTALS TO BUY FUNCTIONS
-                }
-                break;
+        if(!(item_to_shop.item_type == Item.ItemType.Material)){
+            switch(item_to_shop.price_type){
+                case Item.PriceType.Money:
+                    if(player.player_money >= item_to_shop.item_price * quantity){
+                        //BUYED
+                        NewItemToInventory(item_to_shop, quantity);
+                        player.player_money -= item_to_shop.item_price * quantity;
+                    }
+                    else{
+                        //NO MONEY TO BUY FUNCTIONS
+                    }
+                    break;
+                case Item.PriceType.Ore:
+                    if(player.player_rocks >= item_to_shop.item_price * quantity){
+                        //BUYED
+                        NewItemToInventory(item_to_shop, quantity);
+                        player.player_rocks -= item_to_shop.item_price * quantity;
+                    }
+                    else{
+                        //NO ROCKS TO BUY FUNCTIONS
+                    }
+                    break;
+                case Item.PriceType.Crystal:
+                    if(player.player_crystals >= item_to_shop.item_price * quantity){
+                        //BUYED
+                        NewItemToInventory(item_to_shop, quantity);
+                        player.player_crystals -= item_to_shop.item_price * quantity;
+                    }
+                    else{
+                        //NO CRYSTALS TO BUY FUNCTIONS
+                    }
+                    break;
+            }
+        }
+        else{
+            if(item_to_shop.item_name == "Tile"){
+                player.player_tiles += quantity;
+                player.player_money -= item_to_shop.item_price * quantity;
+            }
         }
         
     }
@@ -470,7 +493,15 @@ public class GameManager : MonoBehaviour
 
         }
         else{
-            //Cant buy materials
+            if(item_to_shop.item_name == "Tile"){
+                if(player.player_money >= item_to_shop.item_price){
+                    shop_amount_bool = true;
+                    shop_amount_screen.GetComponent<ShopAmountQuantityScript>().buy_or_sell = true;
+                }
+            }
+            else{
+                //can't buy this material
+            }
         }
     }
     public void SelectAmountSellingFunction(){
@@ -589,9 +620,34 @@ public class GameManager : MonoBehaviour
                     principal_grid.crystal_grid[x,y] = 1;
                     principal_grid.GridTilesUpdate(x,y,GameObject.Find("TileGrid"));
                 }
-                principal_grid.ore_amount_grid[x,y] = Random.Range(10,25);
-                principal_grid.ore_max_life_grid[x,y] = Random.Range(2,ore_life);
+                principal_grid.ore_amount_grid[x,y] = Random.Range(Mathf.RoundToInt(ore_amount_range.x),Mathf.RoundToInt(ore_amount_range.y));
+                principal_grid.ore_max_life_grid[x,y] = Random.Range(2,ore_life+1);
                 principal_grid.ore_life_grid[x,y] = principal_grid.ore_max_life_grid[x,y];
+            }
+        }
+    }
+    void CanCollectFarmState(){
+        if(create_build || remove_build || buying_tile){
+            can_colect_farms = false;
+        }
+        else{
+            can_colect_farms = true;
+        }
+    }
+    void BuyTileBoolController(){
+        buying_tile = !buying_tile;
+        create_build = false;
+        remove_build = false;
+    }
+    void AccumulatedFarmsVisibilityController(){
+        for(int x = 0; x < principal_grid.text_farm_accumulated_points.GetLength(0); x++){
+            for(int y = 0; y < principal_grid.text_farm_accumulated_points.GetLength(1); y++){
+                if(principal_grid.base_grid[x,y] != 0){
+                    principal_grid.text_farm_accumulated_points[x,y].gameObject.SetActive(true);
+                }
+                else{
+                    principal_grid.text_farm_accumulated_points[x,y].gameObject.SetActive(false);
+                }
             }
         }
     }

@@ -40,9 +40,16 @@ public class ShopAmountQuantityScript : MonoBehaviour
                             break;
                         default:
                             max_quantity = Mathf.FloorToInt(manager.player.player_money/selected_object.item_price);
-                        break;
+                            break;
                     }
                     break;
+                    case Item.ItemType.Material:
+                        switch(selected_object.price_type){
+                            default:
+                                max_quantity = Mathf.FloorToInt(manager.player.player_money/selected_object.item_price);
+                                break;
+                        }
+                        break;
                     
                 }
                 if(max_quantity > limit_quantity){
@@ -56,33 +63,37 @@ public class ShopAmountQuantityScript : MonoBehaviour
             }
             else{
                 int var_quantity = 0;
-                switch(selected_object.item_type){
-                    case Item.ItemType.Material:
-                        switch(selected_object.price_type){
-                            case Item.PriceType.Ore:
-                                var_quantity = Mathf.FloorToInt(manager.player.player_rocks);
-                                break;
-                            case Item.PriceType.Crystal:
-                                var_quantity = Mathf.FloorToInt(manager.player.player_crystals);
-                                break;
-                            case Item.PriceType.Money:
-                                var_quantity = Mathf.FloorToInt(manager.player.player_energy);
-                                break;
-                        }
-                    break;
-                    case Item.ItemType.Build:
-                        for(int i = 0; i < manager.player.inventory.item_slots.Length; i++){
-                            if(manager.player.inventory.item_slots[i] == selected_object){
-                                var_quantity = manager.player.inventory.item_amount[i];
-                                break;
+                if(!(selected_object.item_name == "Tile")){
+                    switch(selected_object.item_type){
+                        case Item.ItemType.Material:
+                            switch(selected_object.price_type){
+                                case Item.PriceType.Ore:
+                                    var_quantity = Mathf.FloorToInt(manager.player.player_rocks);
+                                    break;
+                                case Item.PriceType.Crystal:
+                                    var_quantity = Mathf.FloorToInt(manager.player.player_crystals);
+                                    break;
+                                case Item.PriceType.Money:
+                                    var_quantity = Mathf.FloorToInt(manager.player.player_energy);
+                                    break;
                             }
-                            else{
-                                var_quantity = 0;
+                        break;
+                        case Item.ItemType.Build:
+                            for(int i = 0; i < manager.player.inventory.item_slots.Length; i++){
+                                if(manager.player.inventory.item_slots[i] == selected_object){
+                                    var_quantity = manager.player.inventory.item_amount[i];
+                                    break;
+                                }
+                                else{
+                                    var_quantity = 0;
+                                }
                             }
-                        }
-                    break;
+                        break;
+                    }
                 }
-
+                else{
+                    var_quantity = Mathf.FloorToInt(manager.player.player_tiles);
+                }
                 max_quantity = var_quantity;
                 price = selected_object.item_price * current_quantity;
                 current_quantity = Mathf.FloorToInt(max_quantity * slider.value) + increment_value + decrement_value;

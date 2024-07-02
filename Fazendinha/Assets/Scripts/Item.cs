@@ -36,6 +36,5 @@ public class Item : ScriptableObject
     public PriceType price_type;
     public string item_description;
     public int item_price;
-    public GameObject item_prefab;
 
 }

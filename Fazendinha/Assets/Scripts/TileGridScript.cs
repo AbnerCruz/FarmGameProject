@@ -7,4 +7,5 @@ public class TileGridScript : MonoBehaviour
     public Sprite rock_tile_sprite;
     public Sprite crystal_tile_sprite;
     public Sprite breaked_tile_sprite;
+    public Sprite flat_rock_tile;
 }

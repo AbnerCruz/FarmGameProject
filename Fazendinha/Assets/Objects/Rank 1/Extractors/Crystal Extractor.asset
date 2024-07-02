@@ -19,8 +19,7 @@ MonoBehaviour:
   material_type: 0
   price_type: 3
   item_description: "Este item \xE9 capaz de minerar cristais"
-  item_price: 500
-  item_prefab: {fileID: 0}
+  item_price: 1000
   farm_reward: 0
   farm_level: 1
   farm_mature_timer: 2

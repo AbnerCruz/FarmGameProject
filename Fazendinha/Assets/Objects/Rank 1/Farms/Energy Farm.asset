@@ -19,8 +19,7 @@ MonoBehaviour:
   material_type: 0
   price_type: 2
   item_description: "Este item \xE9 capaz de produzir energia"
-  item_price: 1000
-  item_prefab: {fileID: 0}
+  item_price: 2500
   farm_reward: 1
   farm_level: 1
   farm_mature_timer: 10

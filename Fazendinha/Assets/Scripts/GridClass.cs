@@ -22,6 +22,7 @@ public class GridClass
     public int[,] ore_amount_grid;
     public int[,] ore_max_life_grid;
     public int[,] ore_life_grid;
+    public int[,] player_tiles;
     public FarmClass[,] farm_grid;
     public CollectorClass[,] collector_grid;
 
@@ -40,6 +41,7 @@ public class GridClass
         ore_amount_grid = new int[grid_width, grid_height];
         ore_max_life_grid = new int[grid_width, grid_height];
         ore_life_grid = new int[grid_width, grid_height];
+        player_tiles = new int[grid_width, grid_height];
         farm_grid = new FarmClass[grid_width, grid_height];
         collector_grid = new CollectorClass[grid_width, grid_height];
         tile_grid = new GameObject[grid_width, grid_height];
@@ -58,7 +60,7 @@ public class GridClass
                 Debug.DrawLine(GetWorldPosition(x,y), GetWorldPosition(x+1,y), Color.white, 100f);
                 //TEXT LINES
                 text_base_grid_value[x,y] = utils.CreateText($"TextGrid[{x}{y}]", "TextGrid", base_grid[x,y].ToString(), GetWorldPosition(x,y) + new Vector2(grid_cell_size, grid_cell_size) * 0.5f, grid_cell_size*5, Color.white, TextAnchor.MiddleCenter, TextAlignment.Center, 1);
-                text_farm_accumulated_points[x,y] = utils.CreateText($"AccumulatedPoints[{x}{y}]", "TextGrid", "0", GetWorldPosition(x,y) + new Vector2(grid_cell_size, grid_cell_size) * 0.85f, grid_cell_size*2, Color.white, TextAnchor.MiddleRight, TextAlignment.Center, 1);
+                text_farm_accumulated_points[x,y] = utils.CreateText($"AccumulatedPoints[{x}{y}]", "AccumulatedFarmsGrid", "0", GetWorldPosition(x,y) + new Vector2(grid_cell_size, grid_cell_size) * 0.85f, grid_cell_size*2, Color.white, TextAnchor.MiddleRight, TextAlignment.Center, 1);
             }
         }
         //GRID LINES
