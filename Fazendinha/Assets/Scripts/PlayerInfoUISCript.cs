@@ -21,6 +21,7 @@ public class PlayerInfoUISCript : MonoBehaviour
         player_nickname.text = manager.player.nickname;
     }
     void Update(){
+        player_nickname.text = manager.player.nickname;
         player_money.text = manager.player.player_money.ToString();
         player_rocks.text = manager.player.player_rocks.ToString();
         player_crystals.text = manager.player.player_crystals.ToString();

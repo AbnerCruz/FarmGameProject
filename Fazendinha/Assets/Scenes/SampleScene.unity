@@ -4992,7 +4992,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0.2, y: 1}
-  m_AnchoredPosition: {x: 176.91254, y: -0.28199768}
+  m_AnchoredPosition: {x: 176.91406, y: -0.28199768}
   m_SizeDelta: {x: 353.83, y: -8.97}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &801171442
@@ -7996,6 +7996,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   mainCamera: {fileID: 519420033}
+  builds_list:
+  - build_value: 0
+    build_base_item: {fileID: 11400000, guid: 82dfbd5352f05414ea8b43c0044f658e, type: 2}
+  - build_value: 0
+    build_base_item: {fileID: 11400000, guid: a31979451cf27b6419884943325e4804, type: 2}
+  - build_value: 0
+    build_base_item: {fileID: 11400000, guid: c0e5a635117df734f8112c039f17214d, type: 2}
+  saveName: NewSave
   grid_width: 30
   grid_height: 30
   grid_cell_size: 4
@@ -8023,6 +8031,7 @@ MonoBehaviour:
   hot_bar: {fileID: 784657971}
   hotbar_num: 1
   rock_reward_cooldown_initial: 0
+  filePath: 
 --- !u!4 &1263008742
 Transform:
   m_ObjectHideFlags: 0

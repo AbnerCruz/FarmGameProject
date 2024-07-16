@@ -2,7 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityRandom = UnityEngine.Random;
+using System;
 
+[Serializable]
+class PlayerData{
+    public string player_nickname;
+    public float player_money;
+    public float player_energy;
+    public float player_rocks;
+    public float player_crystals;
+    public int player_tiles;
+    public GridClass world_grid;
+}
 public class GameManager : MonoBehaviour
 {
     //References
@@ -10,13 +22,16 @@ public class GameManager : MonoBehaviour
     [Header("References")]
     public Player player;
     public CameraMovement mainCamera;
+    public List<BuildBaseClass> builds_list;
+    public string saveName = "NewSave";
+    SaveAndLoadScript save_load_manager = new SaveAndLoadScript();
 
     //Grid Variables
-    GridClass principal_grid;
+    public GridClass principal_grid;
     [Header("Grid Config")]
-    [SerializeField] int grid_width;
-    [SerializeField] int grid_height;
-    [SerializeField] int grid_cell_size;
+    public int grid_width;
+    public int grid_height;
+    public int grid_cell_size;
 
     //Options
     [Header("Options")]
@@ -68,13 +83,23 @@ public class GameManager : MonoBehaviour
     float rock_reward_cooldown;
     public float rock_reward_cooldown_initial;
 
+    //SAVE AND LOAD
+    public string filePath;
+
+
 
 //***UNITY METHODS***//
     void Awake(){
         //Creating Base Grid
         principal_grid = new GridClass(grid_width, grid_height, grid_cell_size,this);
+        foreach(BuildBaseClass i in builds_list){
+            i.build_value = (int)i.build_base_item.build_type;
+        }
         //Creating Crystal Grid
         CreatingCrystalGrid();
+
+        //Save Path
+        filePath = Application.persistentDataPath + "/"+ saveName;
     }
     void Start(){
         play_mode = true;
@@ -111,7 +136,6 @@ public class GameManager : MonoBehaviour
 
         //Pause Mode
         if(play_mode){
-            BuildSystem();
             ShopStatus();
             DoubleClick();
             Inputs();
@@ -130,7 +154,6 @@ public class GameManager : MonoBehaviour
 //***MY METHODS***//
     //Build System
     void BuildSystem(){
-        if(Input.GetMouseButtonDown(0)){
             if(create_build){
                 if(principal_grid.VerifyGridLimits(utils.GetMousePos())){
                     if(build_object != null && build_object.item_type == Item.ItemType.Build && principal_grid.ReturnCellValue(utils.GetMousePos()) == null){
@@ -138,23 +161,14 @@ public class GameManager : MonoBehaviour
                         principal_grid.GetXY(utils.GetMousePos(), out x, out y);
                         if(principal_grid.ore_life_grid[x,y] <= 0){
                             if(principal_grid.player_tiles[x,y] == 1){
-                                switch(build_object.build_type){
-                                        case Item.BuildType.FarmObject:
-                                            principal_grid.EditGridCellValue(utils.GetMousePos(), new FarmClass((FarmObject)build_object, this));
-                                            player.inventory.CreateBuildDecrease(build_object);
-                                            break;
-                                        case Item.BuildType.ExtractingObject:
-                                            principal_grid.EditGridCellValue(utils.GetMousePos(), new FarmClass((FarmObject)build_object, this));
-                                            player.inventory.CreateBuildDecrease(build_object);
-                                            break;
-                                        case Item.BuildType.CollectorObject:
-                                            principal_grid.EditGridCellValue(utils.GetMousePos(), new CollectorClass(this,(CollectorObject)build_object));
-                                            player.inventory.CreateBuildDecrease(build_object);
-                                            break;
-                                    }  
-                                    principal_grid.BuildTileGridUpdate(x,y,build_object.item_sprite);
+                                principal_grid.EditBaseGrid(x,y,(int)build_object.build_type);
+                                if(show_debugs){
+                                    principal_grid.EditBaseTextGrid(x,y,(int)build_object.build_type);
                                 }
+                                BuildGridUpdater(principal_grid);
+                                player.inventory.CreateBuildDecrease(principal_grid.ReturnCellValue(utils.GetMousePos()).build_base_item);
                             }
+                        }
                         else{
                             //can't build
                         }
@@ -166,13 +180,59 @@ public class GameManager : MonoBehaviour
                     int x,y;
                     principal_grid.GetXY(utils.GetMousePos(), out x, out y);
                     if(principal_grid.ReturnCellValue(utils.GetMousePos()) != null){
+                        if(principal_grid.ReturnCellValue(utils.GetMousePos()).build_value == 1 || principal_grid.ReturnCellValue(utils.GetMousePos()).build_value == 2){
+                            FarmRewardFunction(x,y);
+                        }
                         player.inventory.RemoveBuildIncrease(principal_grid.ReturnCellValue(utils.GetMousePos()).build_base_item);
-                        principal_grid.EditGridCellValue(utils.GetMousePos(), null);
+                        principal_grid.EditBaseGrid(x,y,0);
+                        principal_grid.EditBaseTextGrid(x,y,0);
+                        BuildGridUpdater(principal_grid);
                         if(principal_grid.player_tiles[x,y] == 1){
                             principal_grid.BuildTileGridUpdate(x,y,null);
                         }
                     }
                 }
+            }
+        
+    }
+    int GridReader(GridClass grid,int x,int y){
+        return grid.base_grid[x,y];
+    }
+    public void BuildGridUpdater(GridClass grid){
+        for(int x = 0; x < grid.base_grid.GetLength(0); x++){
+            for(int y = 0; y < grid.base_grid.GetLength(1); y++){
+                switch(GridReader(grid,x,y)){
+                    default:
+                        grid.farm_grid[x,y] = null;
+                        grid.collector_grid[x,y] = null;
+                        grid.BuildTileGridUpdate(x,y,null);
+                    break;
+                    case 1: //Crystal Extractor
+                        foreach(BuildBaseClass i in builds_list){
+                            if((int)i.build_value == 1 && grid.farm_grid[x,y] == null){
+                                grid.farm_grid[x,y] = new FarmClass((FarmObject)i.build_base_item,this);
+                                grid.BuildTileGridUpdate(x,y,i.build_base_item.item_sprite);
+                            }
+                        }
+                    break;
+                    case 2: //Energy Farm
+                        foreach(BuildBaseClass i in builds_list){
+                            if((int)i.build_value == 2 && grid.farm_grid[x,y] == null){
+                                grid.farm_grid[x,y] = new FarmClass((FarmObject)i.build_base_item,this);
+                                grid.BuildTileGridUpdate(x,y,i.build_base_item.item_sprite);
+                            }
+                        }
+                    break;
+                    case 3: //Collector
+                        foreach(BuildBaseClass i in builds_list){
+                            if((int)i.build_value == 3 && grid.collector_grid[x,y] == null){
+                                grid.collector_grid[x,y] = new CollectorClass(this,(CollectorObject)i.build_base_item);
+                                grid.BuildTileGridUpdate(x,y,i.build_base_item.item_sprite);
+                            }
+                        }
+                    break;
+                }
+                AccumulatedFarmsVisibilityController();
             }
         }
     }
@@ -237,20 +297,16 @@ public class GameManager : MonoBehaviour
     void DoubleClick(){
         if(Input.GetMouseButtonDown(0)){
             float timeSinceLastClick = Time.time - lastClickTime;
-            if(timeSinceLastClick <= 0.2f){
+            if(timeSinceLastClick <= 0.5f){
                 if(principal_grid.VerifyGridLimits(utils.GetMousePos())){
+                    //SOUN FUNCTION HERE
                     int x,y;
                     principal_grid.GetXY(utils.GetMousePos(), out x, out y);
                     //Farms Collect
                     if(can_colect_farms){ 
                         if(principal_grid.farm_grid[x,y] != null){
                             if(principal_grid.farm_grid[x,y].farm_reward == FarmObject.FarmReward.Crystal){
-                                if(principal_grid.farm_grid[x,y].farm_stock != 0){
-                                    player.player_rocks += Random.Range(1,principal_grid.farm_grid[x,y].farm_stock/2);
-                                    player.player_crystals += principal_grid.farm_grid[x,y].farm_stock;
-                                    principal_grid.farm_grid[x,y].farm_stock = 0;
-                                    UpdateTextAccumulatedPoints();
-                                }
+                                FarmRewardFunction(x,y);
                             }
                             else if(principal_grid.farm_grid[x,y].farm_reward == FarmObject.FarmReward.Energy){
                                 if(principal_grid.farm_grid[x,y].farm_stock != 0){
@@ -278,6 +334,14 @@ public class GameManager : MonoBehaviour
                 }
             }
             lastClickTime = Time.time;
+        }
+    }
+    void FarmRewardFunction(int x, int y){
+        if(principal_grid.farm_grid[x,y].farm_stock != 0){
+            player.player_rocks += UnityRandom.Range(1,principal_grid.farm_grid[x,y].farm_stock/2);
+            player.player_crystals += principal_grid.farm_grid[x,y].farm_stock;
+            principal_grid.farm_grid[x,y].farm_stock = 0;
+            UpdateTextAccumulatedPoints();
         }
     }
 
@@ -313,6 +377,19 @@ public class GameManager : MonoBehaviour
         }
         if(Input.GetKeyDown(KeyCode.J)){
             BuyTileBoolController();
+        }
+        //Build System Input
+        if(Input.GetMouseButtonDown(0)){
+            BuildSystem();
+        }
+
+        //SAVE AND LOAD INPUT
+        if(Input.GetKeyDown(KeyCode.Z)){
+            save_load_manager.Save(this,principal_grid,filePath);
+        }
+        if(Input.GetKeyDown(KeyCode.X)){
+            save_load_manager.Load(this,principal_grid,filePath);
+            UpdateTextAccumulatedPoints();
         }
     }
     //Add a new Item to Inventory
@@ -462,7 +539,7 @@ public class GameManager : MonoBehaviour
             build_object = null;
         }
     }
-    //This shit control if buy or sell amount selection is active or not
+    //This shit control if buy or sell amount selection function is active or not
     void ShopAmountBoolController(){
         shop_amount_screen.SetActive(shop_amount_bool);
         shop_amount_screen.GetComponent<ShopAmountQuantityScript>().selected_object = item_to_shop;
@@ -555,28 +632,6 @@ public class GameManager : MonoBehaviour
         }
     }
     public void CrystalReward(int x, int y){
-        // if(principal_grid.rocks_grid[x,y] < crystal_life && principal_grid.base_grid[x,y] == 0 && can_colect_farms){
-        //     //Visual Function here function();
-        //     if(rock_reward_cooldown >= rock_reward_cooldown_initial){
-        //         int chance = 50; // % of chance
-        //         int sorted = Random.Range(1,100);
-        //         if(sorted > 100-chance){
-        //             int reward = Random.Range(2,50);
-                    //  for(int i = 0; i < Mathf.FloorToInt(reward/2); i++){
-                    //      GameObject newRock = Instantiate(rock_material_prefab, utils.GetMousePos(), Quaternion.identity);
-                    //      newRock.GetComponent<Rigidbody2D>().velocity = new Vector3(Random.Range(-3f,3f),Random.Range(1f,4f),0);
-                    //  }
-        //             player.player_rocks += reward;
-        //             principal_grid.rocks_grid[x,y] += 1;
-        //             rock_reward_cooldown = 0f;
-        //             Color current_color = principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().color;
-        //             principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().color = new Color(current_color.r, current_color.g,current_color.b,current_color.a - 0.2f);
-        //         }
-        //     }
-        // }
-        // if(principal_grid.rocks_grid[x,y] >= crystal_life){
-        //     principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = null;
-        // }
         if(principal_grid.base_grid[x,y] == 0 && can_colect_farms){
             if(rock_reward_cooldown >= rock_reward_cooldown_initial){
                 if(principal_grid.ore_life_grid[x,y] > 0){
@@ -585,7 +640,7 @@ public class GameManager : MonoBehaviour
                         //Is a Crystal cell
                         if(principal_grid.ore_amount_grid[x,y] > 0){
                             //Have Crystals
-                            reward = Random.Range(principal_grid.ore_amount_grid[x,y]/2,principal_grid.ore_amount_grid[x,y]);
+                            reward = UnityRandom.Range(principal_grid.ore_amount_grid[x,y]/2,principal_grid.ore_amount_grid[x,y]);
                             player.player_crystals += reward;
                             principal_grid.ore_life_grid[x,y]--;
                         }
@@ -593,14 +648,14 @@ public class GameManager : MonoBehaviour
                     else{
                         //Is not a Crystal cell
                         if(principal_grid.ore_amount_grid[x,y] > 0){
-                            reward = Random.Range(principal_grid.ore_amount_grid[x,y]/2,principal_grid.ore_amount_grid[x,y]);
+                            reward = UnityRandom.Range(principal_grid.ore_amount_grid[x,y]/2,principal_grid.ore_amount_grid[x,y]);
                             player.player_rocks += reward;
                             principal_grid.ore_life_grid[x,y]--;
                         }
                     }
                     for(int i = 0; i < Mathf.FloorToInt(reward/2); i++){
                         GameObject newRock = Instantiate(rock_material_prefab, utils.GetMousePos(), Quaternion.identity);
-                        newRock.GetComponent<Rigidbody2D>().velocity = new Vector3(Random.Range(-3f,3f),Random.Range(1f,4f),0);
+                        newRock.GetComponent<Rigidbody2D>().velocity = new Vector3(UnityRandom.Range(-3f,3f),UnityRandom.Range(1f,4f),0);
                     }
                     rock_reward_cooldown = 0f;
                     Color current_color = principal_grid.tile_grid[x,y].GetComponent<SpriteRenderer>().color;
@@ -614,14 +669,14 @@ public class GameManager : MonoBehaviour
     void CreatingCrystalGrid(){
         for(int x = 0; x < principal_grid.crystal_grid.GetLength(0); x++){
             for(int y = 0; y < principal_grid.crystal_grid.GetLength(1); y++){
-                int sorted = Random.Range(0,100);
+                int sorted = UnityRandom.Range(0,100);
                 int chance = 20;
                 if(sorted > 100 - chance){
                     principal_grid.crystal_grid[x,y] = 1;
                     principal_grid.GridTilesUpdate(x,y,GameObject.Find("TileGrid"));
                 }
-                principal_grid.ore_amount_grid[x,y] = Random.Range(Mathf.RoundToInt(ore_amount_range.x),Mathf.RoundToInt(ore_amount_range.y));
-                principal_grid.ore_max_life_grid[x,y] = Random.Range(2,ore_life+1);
+                principal_grid.ore_amount_grid[x,y] = UnityRandom.Range(Mathf.RoundToInt(ore_amount_range.x),Mathf.RoundToInt(ore_amount_range.y));
+                principal_grid.ore_max_life_grid[x,y] = UnityRandom.Range(2,ore_life+1);
                 principal_grid.ore_life_grid[x,y] = principal_grid.ore_max_life_grid[x,y];
             }
         }
@@ -639,16 +694,28 @@ public class GameManager : MonoBehaviour
         create_build = false;
         remove_build = false;
     }
-    void AccumulatedFarmsVisibilityController(){
+    public void AccumulatedFarmsVisibilityController(){
         for(int x = 0; x < principal_grid.text_farm_accumulated_points.GetLength(0); x++){
             for(int y = 0; y < principal_grid.text_farm_accumulated_points.GetLength(1); y++){
-                if(principal_grid.base_grid[x,y] != 0){
-                    principal_grid.text_farm_accumulated_points[x,y].gameObject.SetActive(true);
+                //farm stock memory
+                if(principal_grid.farm_grid[x,y] != null){
+                    principal_grid.farm_stock_grid[x,y] = principal_grid.farm_grid[x,y].farm_stock;
                 }
-                else{
-                    principal_grid.text_farm_accumulated_points[x,y].gameObject.SetActive(false);
+
+                //Visibility controller
+                if(principal_grid.text_farm_accumulated_points[x,y] != null){
+                    if(principal_grid.base_grid[x,y] != 0){
+                        principal_grid.text_farm_accumulated_points[x,y].gameObject.SetActive(true);
+                    }
+                    else{
+                        principal_grid.text_farm_accumulated_points[x,y].gameObject.SetActive(false);
+                    }
                 }
             }
         }
+        
+    }
+    public void ManagerDestroy(GameObject x){
+        Destroy(x);
     }
 } 

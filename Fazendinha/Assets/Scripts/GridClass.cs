@@ -3,19 +3,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
+[Serializable]
 public class GridClass
 {
     //Management
+    [NonSerialized]
     GameManager manager;
-    MyUtils utils = new MyUtils();
+    [NonSerialized]
+    public MyUtils utils = new MyUtils();
     //Configuration
     int grid_width;
     int grid_height;
     int grid_cell_size;
     //Grids
+    [NonSerialized]
     public GameObject[,] tile_grid;
+    [NonSerialized]
     public GameObject[,] build_tile_grid;
-    TextMesh[,] text_base_grid_value;
+    [NonSerialized]
+    public TextMesh[,] text_base_grid_value;
+    [NonSerialized]
     public TextMesh[,] text_farm_accumulated_points;
     public int[,] base_grid;
     public int[,] crystal_grid;
@@ -23,7 +30,10 @@ public class GridClass
     public int[,] ore_max_life_grid;
     public int[,] ore_life_grid;
     public int[,] player_tiles;
+    [NonSerialized]
     public FarmClass[,] farm_grid;
+    public int[,] farm_stock_grid;
+    [NonSerialized]
     public CollectorClass[,] collector_grid;
 
     //Constructor
@@ -43,16 +53,18 @@ public class GridClass
         ore_life_grid = new int[grid_width, grid_height];
         player_tiles = new int[grid_width, grid_height];
         farm_grid = new FarmClass[grid_width, grid_height];
+        farm_stock_grid = new int[grid_width, grid_height];
         collector_grid = new CollectorClass[grid_width, grid_height];
         tile_grid = new GameObject[grid_width, grid_height];
         build_tile_grid = new GameObject[grid_width, grid_height];
         //functions
         GridDebug();
+        AccumulatedPointsDebug();
         GridTiles();
     }
 
     //Visual Debug
-    void GridDebug(){
+    public void GridDebug(){
         for(int x = 0; x < base_grid.GetLength(0); x++){
             for(int y = 0; y < base_grid.GetLength(1); y++){
                 //GRID LINES
@@ -60,17 +72,22 @@ public class GridClass
                 Debug.DrawLine(GetWorldPosition(x,y), GetWorldPosition(x+1,y), Color.white, 100f);
                 //TEXT LINES
                 text_base_grid_value[x,y] = utils.CreateText($"TextGrid[{x}{y}]", "TextGrid", base_grid[x,y].ToString(), GetWorldPosition(x,y) + new Vector2(grid_cell_size, grid_cell_size) * 0.5f, grid_cell_size*5, Color.white, TextAnchor.MiddleCenter, TextAlignment.Center, 1);
-                text_farm_accumulated_points[x,y] = utils.CreateText($"AccumulatedPoints[{x}{y}]", "AccumulatedFarmsGrid", "0", GetWorldPosition(x,y) + new Vector2(grid_cell_size, grid_cell_size) * 0.85f, grid_cell_size*2, Color.white, TextAnchor.MiddleRight, TextAlignment.Center, 1);
             }
         }
         //GRID LINES
         Debug.DrawLine(GetWorldPosition(0, grid_height), GetWorldPosition(grid_width, grid_height), Color.white, 100f);
         Debug.DrawLine(GetWorldPosition(grid_width, 0), GetWorldPosition(grid_width, grid_height), Color.white, 100f);
-
+    }
+    public void AccumulatedPointsDebug(){
+        for(int x = 0; x < base_grid.GetLength(0); x++){
+            for(int y = 0; y < base_grid.GetLength(1); y++){
+                text_farm_accumulated_points[x,y] = utils.CreateText($"AccumulatedPoints[{x}{y}]", "AccumulatedFarmsGrid", "0", GetWorldPosition(x,y) + new Vector2(grid_cell_size, grid_cell_size) * 0.85f, grid_cell_size*2, Color.white, TextAnchor.MiddleRight, TextAlignment.Center, 3);
+            }
+        }
     }
 
     //Create Grid Tiles
-    void GridTiles(){
+    public void GridTiles(){
         for(int x = 0; x < tile_grid.GetLength(0); x++){
             for(int y = 0; y < tile_grid.GetLength(1); y++){
                 //Base Tile Grid
@@ -106,7 +123,7 @@ public class GridClass
     }
     public void BuildTileGridUpdate(int x, int y,Sprite sprite){
         if(sprite != null){
-                build_tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = sprite;
+            build_tile_grid[x,y].GetComponent<SpriteRenderer>().sprite = sprite;
 
         }
         else{
@@ -136,34 +153,11 @@ public class GridClass
         }
     }
     //Edit Grid Cell Value
-    public void EditGridCellValue(Vector2 cell_position, BuildBaseClass build){
-        int x,y;
-        GetXY(cell_position, out x, out y);
-        switch(build){
-            case null: //REMOVE BUILDS
-                farm_grid[x,y] = null;
-                collector_grid[x,y] = null;
-                base_grid[x,y] = 0;
-                text_base_grid_value[x,y].text = base_grid[x,y].ToString();
-                text_farm_accumulated_points[x,y].text = "0";
-                break;
-            case FarmClass: //BUILD IS A FARM
-                if(farm_grid[x,y] == null){
-                    farm_grid[x,y] = (FarmClass)build;
-                    base_grid[x,y] = build.build_value;
-                    text_base_grid_value[x,y].text = base_grid[x,y].ToString();
-                    text_farm_accumulated_points[x,y].text = "0";
-                }
-                break;
-            case CollectorClass: //BUILD IS A COLLECTOR
-                if(collector_grid[x,y] == null){
-                    collector_grid[x,y] = (CollectorClass)build;
-                    base_grid[x,y] = build.build_value;
-                    text_base_grid_value[x,y].text = base_grid[x,y].ToString();
-                    text_farm_accumulated_points[x,y].text = "0";
-                }
-                break;
-        }
+    public void EditBaseGrid(int x, int y, int value){
+        base_grid[x,y] = value;
+    }
+    public void EditBaseTextGrid(int x, int y, int value){
+        text_base_grid_value[x,y].text = base_grid[x,y].ToString();
     }
 
     //Verify If Is Null
