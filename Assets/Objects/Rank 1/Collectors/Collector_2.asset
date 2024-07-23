@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaea65db227a4b84bb408cf5632144a6, type: 3}
+  m_Name: Collector_2
+  m_EditorClassIdentifier: 
+  item_sprite: {fileID: 0}
+  item_name: Collector LvL 2
+  item_id: 0
+  item_type: 1
+  build_type: 3
+  material_type: 0
+  price_type: 3
+  item_description: This build can autocollect
+  item_price: 10000
+  collector_level: 2
+  collector_timer: 20
+  collector_initial_timer: 20
