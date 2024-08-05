@@ -9,17 +9,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eaea65db227a4b84bb408cf5632144a6, type: 3}
+  m_Script: {fileID: 11500000, guid: 3a84e81ed90f33842b4bedffd41fe355, type: 3}
   m_Name: Collector_1
   m_EditorClassIdentifier: 
   item_sprite: {fileID: 21300000, guid: 3e5d1ee15667f1349bce0c255065a1c9, type: 3}
   item_name: Collector LVL 1
-  item_id: 5
+  item_id: 7
   item_type: 1
   build_type: 3
   material_type: 0
   price_type: 3
-  item_description: This build can autocollect
+  item_description: This build auto collect farm drops in a 1 tile range around
   item_price: 5000
   collector_level: 1
   collector_timer: 30

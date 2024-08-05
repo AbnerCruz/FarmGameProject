@@ -807,7 +807,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1370542773}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &346048644
@@ -823,10 +824,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   load_button: {fileID: 1283723875}
-  newgame_button: {fileID: 50892132}
+  new_game_button: {fileID: 50892132}
   game_version_text: {fileID: 1259067840}
   save_name: NewSave
-  game_version: Alpha 0.0.3
+  game_version: Alpha 0.5.0
   tutorial: 0
   tutorial_container: {fileID: 91158068}
 --- !u!82 &346048645
@@ -2919,12 +2920,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1370542770}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 346048643}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1370542774
 MonoBehaviour:
@@ -3590,7 +3591,6 @@ CanvasRenderer:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1370542773}
   - {fileID: 346048643}
   - {fileID: 766033164}
   - {fileID: 749127345}

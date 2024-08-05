@@ -17,7 +17,8 @@ MonoBehaviour:
   item_id: 4
   item_type: 2
   build_type: 0
-  material_type: 0
+  material_type: 4
   price_type: 3
-  item_description: Gives you 1 tile to buy
-  item_price: 1000
+  item_description: This item is used to convert breaked tiles in your own tile,
+    you can only position builds in owned tiles
+  item_price: 500

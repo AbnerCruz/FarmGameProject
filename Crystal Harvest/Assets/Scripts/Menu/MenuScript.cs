@@ -10,7 +10,7 @@ using UnityEngine.UI;
 public class MenuScript : MonoBehaviour
 {
     public GameObject load_button;
-    public GameObject newgame_button;
+    public GameObject new_game_button;
     public Text game_version_text;
     public string save_name;
     public string game_version;
@@ -28,25 +28,29 @@ public class MenuScript : MonoBehaviour
         }
     }
       IEnumerator MyRoutine(int indexScene, int load_option){
-        yield return new WaitForSeconds(0.6f);
+        yield return new WaitForSeconds(0.6f); //Confirm song play time before load
         PlayerPrefs.SetInt("LoadOption", load_option);
         PlayerPrefs.SetString("SaveName", save_name);
         SceneManager.LoadScene(indexScene);
     }
+    //If player have a saved game and select to load it
     public void LoadSave(int indexScene){
         load_button.GetComponent<AudioSource>().Play();
         StartCoroutine(MyRoutine(indexScene,1));
-        
     }
-  
+
+    //If player select to create a new save
     public void NewSave(int indexScene){
-        newgame_button.GetComponent<AudioSource>().Play();
+        new_game_button.GetComponent<AudioSource>().Play();
         StartCoroutine(MyRoutine(indexScene,0));
     }
+
+    //Quit game
     public void QuitGame(){
         Application.Quit();
-        Debug.Log("Game Closed");
     }
+
+    //This is shit, i will just delete it and do another in the future...
     public void TutorialController(){
         tutorial = !tutorial;
         if(tutorial){

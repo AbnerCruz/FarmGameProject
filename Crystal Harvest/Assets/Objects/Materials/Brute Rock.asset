@@ -14,11 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   item_sprite: {fileID: 21300000, guid: 947da866897b778458c051f7b5a9987f, type: 3}
   item_name: Brute Rock
-  item_id: 1
+  item_id: 3
   item_type: 2
   build_type: 0
   material_type: 1
-  price_type: 1
-  item_description: "Este material pode ser adquirido com quebrando pedras ou com
-    extratores de cristais. N\xE3o pode ser comprado"
+  price_type: 3
+  item_description: This material can be collected by double click in unbreaked tiles
   item_price: 1

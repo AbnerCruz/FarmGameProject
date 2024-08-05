@@ -9,20 +9,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e990de36a555aa747abe1d6c9ceb500c, type: 3}
+  m_Script: {fileID: 11500000, guid: b02005a5caf226748b82b3c15d782b09, type: 3}
   m_Name: Crystal Extractor
   m_EditorClassIdentifier: 
   item_sprite: {fileID: 21300000, guid: 87ead6df29dd32a4e8ba42eebe85a346, type: 3}
   item_name: Crystal Extractor
-  item_id: 6
+  item_id: 5
   item_type: 1
   build_type: 2
   material_type: 0
   price_type: 3
-  item_description: "Este item \xE9 capaz de minerar cristais"
+  item_description: This item can auto collect crystals and some rocks
   item_price: 1000
-  farm_reward: 0
+  farm_reward: 1
   farm_level: 1
-  farm_mature_timer: 2
+  farm_base_mature_timer: 5
   farm_drop_chance: 20
-  farm_stock_limit: 10
+  farm_base_storage: 20
